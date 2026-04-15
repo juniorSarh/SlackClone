@@ -2,30 +2,37 @@ import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import "./App.css";
 
+const channels = ["general", "random", "dev", "design"];
+
 function App() {
+  const [currentChannel, setCurrentChannel] = useState("general");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
 
+  // Join room when channel changes
   useEffect(() => {
-  socket.on("receive_message", (data) => {
-    console.log("Message received on frontend:", data);
-    setMessages((prev) => [...prev, data.message]);
-  });
+    socket.emit("join_room", currentChannel);
+    setMessages([]); // clear messages when switching channels
+  }, [currentChannel]);
 
-  return () => {
-    socket.off("receive_message");
-  };
-}, []);
+  // Listen for messages
+  useEffect(() => {
+    socket.on("receive_message", (data) => {
+      if (data.room === currentChannel) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+    });
 
-useEffect(() => {
-  socket.emit("join_room", "general");
-}, []);
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [currentChannel]);
 
   const sendMessage = () => {
     if (!message) return;
 
     socket.emit("send_message", {
-      room: "general",
+      room: currentChannel,
       message,
     });
 
@@ -34,12 +41,25 @@ useEffect(() => {
 
   return (
     <div className="app">
+      {/* Sidebar */}
       <aside className="sidebar">
-        <h2>Slack Clone</h2>
-        <p># general</p>
+        <h2>Channels</h2>
+
+        {channels.map((ch) => (
+          <p
+            key={ch}
+            onClick={() => setCurrentChannel(ch)}
+            className={currentChannel === ch ? "active" : ""}
+          >
+            # {ch}
+          </p>
+        ))}
       </aside>
 
+      {/* Chat */}
       <main className="chat">
+        <h3 className="header">#{currentChannel}</h3>
+
         <div className="messages">
           {messages.map((msg, i) => (
             <div key={i} className="message">
@@ -50,10 +70,9 @@ useEffect(() => {
 
         <div className="inputArea">
           <input
-            type="text"
-            placeholder="Type a message..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type a message..."
           />
           <button onClick={sendMessage}>Send</button>
         </div>

@@ -79,3 +79,8 @@
 .inputArea button:hover {
   background: #4752c4;
 }
+
+.sidebar p.active {
+  background: #5865f2;
+  color: white;
+}
