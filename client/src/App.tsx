@@ -7,14 +7,19 @@ function App() {
   const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data.message]);
-    });
+  socket.on("receive_message", (data) => {
+    console.log("Message received on frontend:", data);
+    setMessages((prev) => [...prev, data.message]);
+  });
 
-    return () => {
-      socket.off("receive_message");
-    };
-  }, []);
+  return () => {
+    socket.off("receive_message");
+  };
+}, []);
+
+useEffect(() => {
+  socket.emit("join_room", "general");
+}, []);
 
   const sendMessage = () => {
     if (!message) return;
