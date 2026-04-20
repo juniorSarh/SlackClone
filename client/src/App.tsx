@@ -8,6 +8,8 @@ function App() {
   const [currentChannel, setCurrentChannel] = useState("general");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [username, setUsername] = useState("");
+const [joined, setJoined] = useState(false);
 
   // Join room when channel changes
   useEffect(() => {
@@ -34,10 +36,24 @@ function App() {
     socket.emit("send_message", {
       room: currentChannel,
       message,
+      username,
     });
 
     setMessage("");
   };
+
+  if (!joined) {
+  return (
+    <div className="join">
+      <h2>Enter Username</h2>
+      <input
+        onChange={(e) => setUsername(e.target.value)}
+        placeholder="Your name..."
+      />
+      <button onClick={() => setJoined(true)}>Join Chat</button>
+    </div>
+  );
+}
 
   return (
     <div className="app">
